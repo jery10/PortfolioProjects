@@ -122,9 +122,33 @@ Continent nvarchar(255),
 Location nvarchar(255),
 Date datetime,
 Population numeric,
-New_vaccinations numeric,
+New_vaccinations float,
 RollingPeopleVaccinated numeric
 );
+
+SELECT 
+    dea.Location, 
+    dea.Population, 
+    dea.date, 
+    MAX(dea.total_cases) AS HighestInfectionCount, 
+    MAX((dea.total_cases / dea.Population)) * 100 AS PercentPopulationInfected
+FROM 
+    Covid_deaths dea
+JOIN 
+    covidvaccinations vac ON dea.Location = vac.Location AND dea.date = vac.date
+WHERE 
+    dea.Location LIKE '%state%'
+GROUP BY 
+    dea.Location, dea.Population, dea.date
+ORDER BY 
+   PercentPopulationInfected DESC;
+
+Select Location, Population, date, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+From Covid_deaths
+Where Location IN ('United States', 'United Kingdom', 'Canada', 'China', 'India', 'Brazil')
+Group by Location, Population, date
+order by PercentPopulationInfected DESC;
+
 
 Insert into #PercentPopulationVaccinated
 Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
