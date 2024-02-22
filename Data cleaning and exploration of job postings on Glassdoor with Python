@@ -1,0 +1,98 @@
+import numpy as np # linear algebra
+
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+import re # regular expression
+
+## Introduction
+
+#### Our goal is to clean, explore and prepare data for analyzing. This is the dataframe which we should work on.
+
+df = pd.read_csv ("C:/Users/User/Downloads/Portfolio_data/Uncleaned_DS_jobs.csv", index_col=0)
+
+df.head()
+
+##### Let us first look at the columns.
+
+df.columns
+
+df.info()
+
+##### The company column is a mix with rating. let's show the company name alone. But first, the company column
+
+df['Company Name'].head()
+
+df['Company Name'] = df['Company Name'].map(lambda x: x.split('\n')[0])
+
+df['Company Name'].head()
+
+##### let's change '-1' and 'unknown' values in every column to 'na' and '0' in integer or float data types
+
+df.iloc[90:120]['Competitors']
+
+string_cols = ['Job Title', 'Salary Estimate', 'Job Description', 'Company Name', 'Location', 'Headquarters', 'Size', 'Type of ownership', 'Industry', 'Sector', 'Revenue', 'Competitors']
+
+df[string_cols] = df[string_cols].replace('-1', 'na')
+df[string_cols] = df[string_cols].replace('unknown', 'na')
+
+number_cols = ['Rating', 'Founded']
+
+df[number_cols] = df[number_cols].replace(-1, 0)
+
+##### While fixing it we will extract minimal and maximal estimation of price to another columns and calculate average price.
+
+df['Salary Estimate'].head()
+
+pattern = r'\$(\d+)K-\$(\d+)K'
+
+df[['min_salary', 'max_salary']] = df['Salary Estimate'].str.extract(pattern).astype(int)
+
+df['avg_salary'] = df.apply(lambda row: int((row['min_salary'] + row['max_salary']) / 2), axis=1)
+
+df['Salary Estimate'] = df['min_salary'].astype(str) + '-' + df['max_salary'].astype(str)
+
+##### And now it is organized!
+
+df[['Salary Estimate', 'min_salary', 'max_salary', 'avg_salary']].head()
+
+##### Let's calculate the company's age using 'Founded' column
+
+df['company_age'] = df['Founded'].map(lambda x: 2024 - x if x > 0 else 0)
+
+df['company_age'].head()
+
+##### Look at this two columns, 'Location' columns describes where you will work, in office in certain State in USA, 'Headquarters' columns describes where is headquarter of company. If there is a same informations in these two columns it means you will work in headquarter of company, otherwise not, we will create new columns named 'same_state'.
+
+df[['Location', 'Headquarters']].head()
+
+df['same_state'] = df.apply(lambda row: 1 if row['Location'] == row['Headquarters'] else 0, axis=1)
+
+df[['Location', 'Headquarters', 'same_state']].head()
+
+##### As you see there is whole bunch of information in 'Job Description' column, we can not read all these one by one. these very popular technologies used in Data Science:
+* Python
+* Excel
+* Hadoop
+* Spark
+* AWS
+* Tableau
+* Big Data
+
+If employer requires some of these technologies these technologies must be written in 'Job Description' column, we will create 7 boolean (0/1) columns which refer to these 7 technologies.
+
+df['python']   = df['Job Description'].map(lambda x: 1 if 'python'   in x.lower() else 0)
+df['excel']    = df['Job Description'].map(lambda x: 1 if 'excel'    in x.lower() else 0)
+df['hadoop']   = df['Job Description'].map(lambda x: 1 if 'hadoop'   in x.lower() else 0)
+df['spark']    = df['Job Description'].map(lambda x: 1 if 'spark'    in x.lower() else 0)
+df['aws']      = df['Job Description'].map(lambda x: 1 if 'aws'      in x.lower() else 0)
+df['tableau']  = df['Job Description'].map(lambda x: 1 if 'tableau'  in x.lower() else 0)
+df['big_data'] = df['Job Description'].map(lambda x: 1 if 'big data' in x.lower() else 0)
+
+df[['python', 'excel', 'hadoop', 'spark', 'aws', 'tableau', 'big_data']]
+
+df.head()
+
+##### Now our data is ready for analysis, and we will save it into a csv file.
+
+df.to_csv('DS_Jobs_clean.csv', index=False)
+
